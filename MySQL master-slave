@@ -1,0 +1,18 @@
+# Настройка master-slave
+# Добавляем в конфигурацию MySQL запись
+sudo nano /etc/mysql/my.cnf
+[mysqld]
+server-id = 1 #ID сервера MASTER
+log_bin = /var/log/mysql/mysql-bin.log #Путь к бинарному логу
+binlog_do_db = sakila #Название базы для реплицирования
+# Перезапускаем MySQL
+sudo systemctl restart mysql.service
+# Заходим под пользователем root, создаем пользователя и даем права на репликацию.
+mysql -u root -p
+CREATE USER 'replication'@'%'; #Создание пользователя без пароля
+GRANT REPLICATION SLAVE ON *.* TO 'replication'@'%'; #Задаем на пользователя права для репликации
+USE sakila; #Выбираем БД 
+FLUSH TABLES WITH READ LOCK; #Блокируем
+SHOW MASTER STATUS; #Здесь необходимо запомнить название File и Position
+mysqldump -u root -p sakila > sakila.sql #Делаем дамп (bash) БД sakila
+UNLOCK TABLES; #Разблокируем таблицы
